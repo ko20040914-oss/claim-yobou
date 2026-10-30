@@ -21,8 +21,9 @@
     </div>
 
     <section class="panel" aria-labelledby="samples-title">
-      <h2 id="samples-title" class="panel__title">サンプルで試す</h2>
-      <div id="samples" class="chips"></div>
+      <h2 id="samples-title" class="panel__title">サンプルで試す（3件）</h2>
+      <div id="samples" class="sample-buttons"></div>
+      <p id="sample-status" class="sample-status" aria-live="polite" hidden></p>
     </section>
 
     <form id="form" class="panel form" novalidate>
@@ -74,6 +75,11 @@
       <h2 id="results-title" class="results__title">予測される購入者の声</h2>
       <p class="disclaimer disclaimer--inline"><strong>実際の商品テストではなく、購入者の声の予測です</strong></p>
       <div id="summary" class="summary"></div>
+      <div id="filter" class="filter" role="group" aria-label="言われやすさで絞り込み">
+        <button type="button" class="filter__btn" data-filter="highmid" aria-pressed="true">高・中のみ</button>
+        <button type="button" class="filter__btn" data-filter="all" aria-pressed="false">すべて</button>
+      </div>
+      <p id="filter-note" class="filter-note" hidden></p>
       <div id="cards" class="cards"></div>
     </section>
   </main>

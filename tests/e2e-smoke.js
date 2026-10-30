@@ -25,10 +25,44 @@ const { chromium } = require('playwright');
   assert.equal(href, 'https://koki-works.booth.pm/');
   ok('フッターにショップリンクがある');
 
-  assert.equal(await page.locator('#samples .chip').count(), 3);
-  ok('サンプルボタンが3つある');
+  const sampleBtns = page.locator('#samples .sample-btn');
+  assert.equal(await sampleBtns.count(), 3);
+  const labels = (await sampleBtns.allInnerTexts()).map((t) => t.replace(/\s+/g, ''));
+  ['ハンドメイドピアス', 'ハンドメイドブレスレット', '中古スニーカー'].forEach((l, i) => assert.ok(labels[i].includes(l), labels[i]));
+  assert.equal(await page.locator('#sample-status').isVisible(), false);
+  ok('サンプルが個別ボタン3つで表示される');
 
-  await page.locator('#samples .chip').nth(0).click();
+  // ブレスレット（低2件を含む）で絞り込みを確認
+  await sampleBtns.nth(1).click();
+  assert.equal(await page.locator('#sample-status').innerText(), '読み込んだサンプル：ハンドメイドブレスレット');
+  assert.equal(await sampleBtns.nth(1).getAttribute('aria-pressed'), 'true');
+  ok('読み込んだサンプル名が表示される');
+
+  await page.click('button[type=submit]');
+  await page.waitForSelector('#results:not([hidden]) .card');
+  const filterAll = page.locator('.filter__btn[data-filter=all]');
+  const filterHM = page.locator('.filter__btn[data-filter=highmid]');
+  assert.equal(await filterHM.getAttribute('aria-pressed'), 'true');
+  assert.equal(await filterHM.innerText(), '高・中のみ（4件）');
+  assert.equal(await filterAll.innerText(), 'すべて（6件）');
+  assert.equal(await page.locator('.card').count(), 4);
+  assert.equal(await page.locator('.card--low').count(), 0);
+  assert.match(await page.locator('#filter-note').innerText(), /「低」の2件/);
+  ok('初期表示は「高・中のみ」で、低は隠れ件数が表示される');
+
+  await filterAll.click();
+  assert.equal(await page.locator('.card').count(), 6);
+  assert.equal(await page.locator('.card--low').count(), 2);
+  assert.equal(await page.locator('#filter-note').isVisible(), false);
+  await filterHM.click();
+  assert.equal(await page.locator('.card').count(), 4);
+  ok('「すべて」で低も表示され、「高・中のみ」に戻せる');
+
+  await page.fill('#form [name=price]', '4800');
+  assert.match(await page.locator('#sample-status').innerText(), /編集済み/);
+  ok('サンプルを編集すると編集済みと表示される');
+
+  await sampleBtns.nth(0).click();
   assert.match(await page.inputValue('#form [name=name]'), /ピアス/);
   await page.click('button[type=submit]');
   await page.waitForSelector('#results:not([hidden]) .card');
@@ -47,6 +81,10 @@ const { chromium } = require('playwright');
   }
 
   await page.click('#clear');
+  assert.equal(await page.locator('#sample-status').isVisible(), false);
+  assert.equal(await page.locator('#results').isVisible(), false);
+  ok('クリアでサンプル名と結果が消える');
+
   await page.fill('#form [name=name]', '<img src=x onerror=alert(1)>手編みマフラー');
   await page.fill('#form [name=description]', 'ウールの手編みマフラーです');
   await page.fill('#form [name=price]', '5800');

@@ -9,8 +9,16 @@
   var summaryEl = document.getElementById('summary');
   var errorEl = document.getElementById('error');
   var samplesEl = document.getElementById('samples');
+  var sampleStatusEl = document.getElementById('sample-status');
+  var filterEl = document.getElementById('filter');
+  var filterNoteEl = document.getElementById('filter-note');
 
   var LEVEL_CLASS = { '高': 'high', '中': 'mid', '低': 'low' };
+
+  // 表示中の結果と絞り込み（初期表示は「高・中のみ」）
+  var lastResult = null;
+  var filter = 'highmid';
+  var loadedSample = null;
 
   function el(tag, className, text) {
     var node = document.createElement(tag);
@@ -117,8 +125,35 @@
     return article;
   }
 
-  function render(result) {
+  function renderCards() {
+    var result = lastResult;
+    var s = result.summary;
+    var highMid = s['高'] + s['中'];
+
+    filterEl.querySelectorAll('.filter__btn').forEach(function (b) {
+      var key = b.dataset.filter;
+      b.setAttribute('aria-pressed', String(key === filter));
+      b.textContent = key === 'all' ? 'すべて（' + result.cards.length + '件）' : '高・中のみ（' + highMid + '件）';
+    });
+
     cardsEl.innerHTML = '';
+    var shown = result.cards.filter(function (card) {
+      return filter === 'all' || card.likelihood !== '低';
+    });
+    shown.forEach(function (card) { cardsEl.appendChild(renderCard(card)); });
+
+    if (filter === 'highmid' && s['低'] > 0) {
+      filterNoteEl.textContent = (highMid === 0 ? '高・中の指摘はありません。' : '') +
+        '言われやすさ「低」の' + s['低'] + '件は「すべて」で表示できます。';
+      filterNoteEl.hidden = false;
+    } else {
+      filterNoteEl.hidden = true;
+    }
+  }
+
+  function render(result) {
+    lastResult = result;
+    filter = 'highmid';
     summaryEl.innerHTML = '';
 
     var modeLabel = result.mode === 'sample' ? 'サンプル出力' : result.mode === 'ai' ? 'AI予測' : 'デモモード（ルールベース）';
@@ -127,10 +162,34 @@
       summaryEl.appendChild(el('span', 'count count--' + LEVEL_CLASS[lv], lv + ' ' + result.summary[lv] + '件'));
     });
 
-    result.cards.forEach(function (card) { cardsEl.appendChild(renderCard(card)); });
+    renderCards();
     resultsEl.hidden = false;
     resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
+
+  filterEl.addEventListener('click', function (e) {
+    var b = e.target.closest('.filter__btn');
+    if (!b || !lastResult) return;
+    filter = b.dataset.filter;
+    renderCards();
+  });
+
+  // 読み込んだサンプル名を表示（編集したらルールベースになることも伝える）
+  function updateSampleStatus() {
+    samplesEl.querySelectorAll('.sample-btn').forEach(function (b) {
+      b.setAttribute('aria-pressed', String(!!loadedSample && b.dataset.sample === loadedSample.id));
+    });
+    if (!loadedSample) {
+      sampleStatusEl.hidden = true;
+      return;
+    }
+    var edited = NS.samples.find(readInput()) !== loadedSample;
+    sampleStatusEl.textContent = '読み込んだサンプル：' + loadedSample.label +
+      (edited ? '（編集済み・ルールベースで予測します）' : '');
+    sampleStatusEl.hidden = false;
+  }
+
+  form.addEventListener('input', updateSampleStatus);
 
   form.addEventListener('submit', function (e) {
     e.preventDefault();
@@ -147,11 +206,17 @@
   });
 
   NS.samples.list.forEach(function (s) {
-    var b = el('button', 'chip', s.emoji + ' ' + s.label);
+    var b = el('button', 'sample-btn');
     b.type = 'button';
     b.dataset.sample = s.id;
+    b.setAttribute('aria-pressed', 'false');
+    b.appendChild(el('span', 'sample-btn__emoji', s.emoji));
+    // 「ハンドメイド／ピアス」のように語の切れ目で改行する
+    b.appendChild(el('span', 'sample-btn__label', s.label.replace(/^(ハンドメイド|中古)/, '$1\n')));
     b.addEventListener('click', function () {
       fillInput(s.input);
+      loadedSample = s;
+      updateSampleStatus();
       errorEl.hidden = true;
       form.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
@@ -160,6 +225,9 @@
 
   document.getElementById('clear').addEventListener('click', function () {
     form.reset();
+    loadedSample = null;
+    lastResult = null;
+    updateSampleStatus();
     resultsEl.hidden = true;
     errorEl.hidden = true;
   });
