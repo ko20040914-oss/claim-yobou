@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="出品前に、将来の購入者クレームを予測するツール。ハンドメイド作家・フリマ出品者向け。">
+  <meta name="theme-color" content="#f7f4ef">
+  <title>未来のクレーム（仮）</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="header">
+    <h1 class="header__title">未来のクレーム<span class="header__tmp">（仮）</span></h1>
+    <p class="header__lead">出品する前に、購入者から言われそうなことを先回りでチェック。</p>
+  </header>
+
+  <main class="main">
+    <div class="disclaimer" role="note">
+      <strong>⚠️ 実際の商品テストではなく、購入者の声の予測です</strong>
+      <span>キーワードにもとづく目安です。最終的な判断は出品者ご自身で行ってください。</span>
+    </div>
+
+    <section class="panel" aria-labelledby="samples-title">
+      <h2 id="samples-title" class="panel__title">サンプルで試す</h2>
+      <div id="samples" class="chips"></div>
+    </section>
+
+    <form id="form" class="panel form" novalidate>
+      <h2 class="panel__title">出品内容を入力</h2>
+
+      <label class="field">
+        <span class="field__label">商品名</span>
+        <input name="name" type="text" autocomplete="off" placeholder="例：天然石ブレスレット ローズクォーツ">
+      </label>
+
+      <label class="field">
+        <span class="field__label">商品説明文</span>
+        <textarea name="description" rows="5" placeholder="出品ページに載せる説明文をそのまま貼り付けてください"></textarea>
+      </label>
+
+      <label class="field">
+        <span class="field__label">価格（円）</span>
+        <input name="price" type="text" inputmode="numeric" autocomplete="off" placeholder="例：3500">
+      </label>
+
+      <label class="field">
+        <span class="field__label">発送方法</span>
+        <input name="shipping" type="text" list="shipping-list" autocomplete="off" placeholder="例：クリックポスト">
+        <datalist id="shipping-list">
+          <option value="定形外郵便">
+          <option value="クリックポスト">
+          <option value="ゆうパケット">
+          <option value="ネコポス">
+          <option value="宅急便コンパクト">
+          <option value="らくらくメルカリ便（宅急便）">
+          <option value="ゆうパック">
+        </datalist>
+      </label>
+
+      <label class="field">
+        <span class="field__label">注意事項</span>
+        <textarea name="notes" rows="3" placeholder="例：ハンドメイド品のため多少の歪みがあります"></textarea>
+      </label>
+
+      <p id="error" class="error" role="alert" hidden></p>
+
+      <div class="actions">
+        <button type="submit" class="btn btn--primary">未来のクレームを予測する</button>
+        <button type="button" id="clear" class="btn btn--ghost">入力をクリア</button>
+      </div>
+    </form>
+
+    <section id="results" class="results" hidden aria-labelledby="results-title">
+      <h2 id="results-title" class="results__title">予測される購入者の声</h2>
+      <p class="disclaimer disclaimer--inline"><strong>実際の商品テストではなく、購入者の声の予測です</strong></p>
+      <div id="summary" class="summary"></div>
+      <div id="cards" class="cards"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>作家・出品者のための小さな道具をつくっています</p>
+    <a class="footer__link" href="https://koki-works.booth.pm/" target="_blank" rel="noopener">koki-works（BOOTH）のショップを見る →</a>
+    <p class="footer__small">未来のクレーム（仮）・プロトタイプ版</p>
+  </footer>
+
+  <script src="js/rules.js"></script>
+  <script src="js/samples.js"></script>
+  <script src="js/generate.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
